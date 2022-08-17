@@ -6,7 +6,7 @@ import (
 	"log"
 	"time"
 
-	pb "github.com/LastBit97/ewallet"
+	pb "github.com/LastBit97/ewallet/ewallet"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 )
@@ -22,7 +22,6 @@ var (
 
 func main() {
 	flag.Parse()
-	// Set up a connection to the server.
 	conn, err := grpc.Dial(*addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		log.Fatalf("did not connect: %v", err)
@@ -30,7 +29,6 @@ func main() {
 	defer conn.Close()
 	c := pb.NewGreeterClient(conn)
 
-	// Contact the server and print out its response.
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 	r, err := c.SayHello(ctx, &pb.HelloRequest{Name: *name})
