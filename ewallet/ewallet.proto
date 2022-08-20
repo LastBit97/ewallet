@@ -8,6 +8,26 @@ service Greeter {
     rpc SayHello (HelloRequest) returns (HelloReply) {}
     
     rpc SayHelloAgain (HelloRequest) returns (HelloReply) {}
+
+    rpc CreateWallet (CreateWalletRequest) returns (CreateWalletReply) {}
+
+    rpc Send(SendRequest) returns (SendReply) {}
+
+  }
+
+  message Wallet {
+    string id = 1;
+    string rev = 2;
+	  string address = 3;
+	  float balance = 4;
+  }
+
+  message CreateWalletRequest{
+    Wallet wallet = 1;
+  }
+
+  message CreateWalletReply{
+    Wallet wallet = 1;
   }
   
   message HelloRequest {
@@ -16,4 +36,14 @@ service Greeter {
   
   message HelloReply {
     string message = 1;
+  }
+
+  message SendRequest{
+    string from = 1;
+    string to = 2;
+    float amount = 3;
+  }
+
+  message SendReply{
+    float balance = 1;
   }
