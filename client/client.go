@@ -11,14 +11,7 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 )
 
-const (
-	defaultName = "world"
-)
-
-var (
-	addr = flag.String("addr", "localhost:50051", "the address to connect to")
-	name = flag.String("name", defaultName, "Name to greet")
-)
+var addr = flag.String("addr", "localhost:50051", "the address to connect to")
 
 func main() {
 	flag.Parse()
@@ -27,26 +20,15 @@ func main() {
 		log.Fatalf("did not connect: %v", err)
 	}
 	defer conn.Close()
-	c := pb.NewGreeterClient(conn)
+	c := pb.NewEWalletClient(conn)
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
-	r, err := c.SayHello(ctx, &pb.HelloRequest{Name: *name})
-	if err != nil {
-		log.Fatalf("could not greet: %v", err)
-	}
-	log.Printf("Greeting: %s", r.GetMessage())
 
-	r, err = c.SayHelloAgain(ctx, &pb.HelloRequest{Name: *name})
-	if err != nil {
-		log.Fatalf("could not greet: %v", err)
-	}
-	log.Printf("Greeting: %s", r.GetMessage())
-
-	reply, err := c.Send(context.Background(), &pb.SendRequest{
+	reply, err := c.Send(ctx, &pb.SendRequest{
 		From:   "e240d825d255af751f5f55af8d9671beabdf2236c0a3b4e2639b3e182d994c88",
 		To:     "9ee4b55aa524c869fda5d86dde14c512cec65fb6ff315ce2b45dd76631b2cfcb",
-		Amount: 500})
+		Amount: 100})
 
 	if err != nil {
 		log.Fatalf("Unexpected error: %v", err)

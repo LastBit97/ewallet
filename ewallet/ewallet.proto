@@ -4,15 +4,11 @@ option go_package = "github.com/LastBit97/ewallet/ewallet";
 
 package ewallet;
 
-service Greeter {
-    rpc SayHello (HelloRequest) returns (HelloReply) {}
-    
-    rpc SayHelloAgain (HelloRequest) returns (HelloReply) {}
+service EWallet {
 
     rpc CreateWallet (CreateWalletRequest) returns (CreateWalletReply) {}
 
     rpc Send(SendRequest) returns (SendReply) {}
-
   }
 
   message Wallet {
@@ -26,14 +22,6 @@ service Greeter {
 
   message CreateWalletReply{
     Wallet wallet = 1;
-  }
-  
-  message HelloRequest {
-    string name = 1;
-  }
-  
-  message HelloReply {
-    string message = 1;
   }
 
   message SendRequest{

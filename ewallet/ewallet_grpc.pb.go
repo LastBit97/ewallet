@@ -18,194 +18,122 @@ import (
 // Requires gRPC-Go v1.32.0 or later.
 const _ = grpc.SupportPackageIsVersion7
 
-// GreeterClient is the client API for Greeter service.
+// EWalletClient is the client API for EWallet service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
-type GreeterClient interface {
-	SayHello(ctx context.Context, in *HelloRequest, opts ...grpc.CallOption) (*HelloReply, error)
-	SayHelloAgain(ctx context.Context, in *HelloRequest, opts ...grpc.CallOption) (*HelloReply, error)
+type EWalletClient interface {
 	CreateWallet(ctx context.Context, in *CreateWalletRequest, opts ...grpc.CallOption) (*CreateWalletReply, error)
 	Send(ctx context.Context, in *SendRequest, opts ...grpc.CallOption) (*SendReply, error)
 }
 
-type greeterClient struct {
+type eWalletClient struct {
 	cc grpc.ClientConnInterface
 }
 
-func NewGreeterClient(cc grpc.ClientConnInterface) GreeterClient {
-	return &greeterClient{cc}
+func NewEWalletClient(cc grpc.ClientConnInterface) EWalletClient {
+	return &eWalletClient{cc}
 }
 
-func (c *greeterClient) SayHello(ctx context.Context, in *HelloRequest, opts ...grpc.CallOption) (*HelloReply, error) {
-	out := new(HelloReply)
-	err := c.cc.Invoke(ctx, "/ewallet.Greeter/SayHello", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *greeterClient) SayHelloAgain(ctx context.Context, in *HelloRequest, opts ...grpc.CallOption) (*HelloReply, error) {
-	out := new(HelloReply)
-	err := c.cc.Invoke(ctx, "/ewallet.Greeter/SayHelloAgain", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *greeterClient) CreateWallet(ctx context.Context, in *CreateWalletRequest, opts ...grpc.CallOption) (*CreateWalletReply, error) {
+func (c *eWalletClient) CreateWallet(ctx context.Context, in *CreateWalletRequest, opts ...grpc.CallOption) (*CreateWalletReply, error) {
 	out := new(CreateWalletReply)
-	err := c.cc.Invoke(ctx, "/ewallet.Greeter/CreateWallet", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/ewallet.EWallet/CreateWallet", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *greeterClient) Send(ctx context.Context, in *SendRequest, opts ...grpc.CallOption) (*SendReply, error) {
+func (c *eWalletClient) Send(ctx context.Context, in *SendRequest, opts ...grpc.CallOption) (*SendReply, error) {
 	out := new(SendReply)
-	err := c.cc.Invoke(ctx, "/ewallet.Greeter/Send", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/ewallet.EWallet/Send", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-// GreeterServer is the server API for Greeter service.
-// All implementations must embed UnimplementedGreeterServer
+// EWalletServer is the server API for EWallet service.
+// All implementations must embed UnimplementedEWalletServer
 // for forward compatibility
-type GreeterServer interface {
-	SayHello(context.Context, *HelloRequest) (*HelloReply, error)
-	SayHelloAgain(context.Context, *HelloRequest) (*HelloReply, error)
+type EWalletServer interface {
 	CreateWallet(context.Context, *CreateWalletRequest) (*CreateWalletReply, error)
 	Send(context.Context, *SendRequest) (*SendReply, error)
-	mustEmbedUnimplementedGreeterServer()
+	mustEmbedUnimplementedEWalletServer()
 }
 
-// UnimplementedGreeterServer must be embedded to have forward compatible implementations.
-type UnimplementedGreeterServer struct {
+// UnimplementedEWalletServer must be embedded to have forward compatible implementations.
+type UnimplementedEWalletServer struct {
 }
 
-func (UnimplementedGreeterServer) SayHello(context.Context, *HelloRequest) (*HelloReply, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method SayHello not implemented")
-}
-func (UnimplementedGreeterServer) SayHelloAgain(context.Context, *HelloRequest) (*HelloReply, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method SayHelloAgain not implemented")
-}
-func (UnimplementedGreeterServer) CreateWallet(context.Context, *CreateWalletRequest) (*CreateWalletReply, error) {
+func (UnimplementedEWalletServer) CreateWallet(context.Context, *CreateWalletRequest) (*CreateWalletReply, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateWallet not implemented")
 }
-func (UnimplementedGreeterServer) Send(context.Context, *SendRequest) (*SendReply, error) {
+func (UnimplementedEWalletServer) Send(context.Context, *SendRequest) (*SendReply, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Send not implemented")
 }
-func (UnimplementedGreeterServer) mustEmbedUnimplementedGreeterServer() {}
+func (UnimplementedEWalletServer) mustEmbedUnimplementedEWalletServer() {}
 
-// UnsafeGreeterServer may be embedded to opt out of forward compatibility for this service.
-// Use of this interface is not recommended, as added methods to GreeterServer will
+// UnsafeEWalletServer may be embedded to opt out of forward compatibility for this service.
+// Use of this interface is not recommended, as added methods to EWalletServer will
 // result in compilation errors.
-type UnsafeGreeterServer interface {
-	mustEmbedUnimplementedGreeterServer()
+type UnsafeEWalletServer interface {
+	mustEmbedUnimplementedEWalletServer()
 }
 
-func RegisterGreeterServer(s grpc.ServiceRegistrar, srv GreeterServer) {
-	s.RegisterService(&Greeter_ServiceDesc, srv)
+func RegisterEWalletServer(s grpc.ServiceRegistrar, srv EWalletServer) {
+	s.RegisterService(&EWallet_ServiceDesc, srv)
 }
 
-func _Greeter_SayHello_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(HelloRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(GreeterServer).SayHello(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/ewallet.Greeter/SayHello",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(GreeterServer).SayHello(ctx, req.(*HelloRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _Greeter_SayHelloAgain_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(HelloRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(GreeterServer).SayHelloAgain(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/ewallet.Greeter/SayHelloAgain",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(GreeterServer).SayHelloAgain(ctx, req.(*HelloRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _Greeter_CreateWallet_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _EWallet_CreateWallet_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(CreateWalletRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(GreeterServer).CreateWallet(ctx, in)
+		return srv.(EWalletServer).CreateWallet(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/ewallet.Greeter/CreateWallet",
+		FullMethod: "/ewallet.EWallet/CreateWallet",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(GreeterServer).CreateWallet(ctx, req.(*CreateWalletRequest))
+		return srv.(EWalletServer).CreateWallet(ctx, req.(*CreateWalletRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Greeter_Send_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _EWallet_Send_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(SendRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(GreeterServer).Send(ctx, in)
+		return srv.(EWalletServer).Send(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/ewallet.Greeter/Send",
+		FullMethod: "/ewallet.EWallet/Send",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(GreeterServer).Send(ctx, req.(*SendRequest))
+		return srv.(EWalletServer).Send(ctx, req.(*SendRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-// Greeter_ServiceDesc is the grpc.ServiceDesc for Greeter service.
+// EWallet_ServiceDesc is the grpc.ServiceDesc for EWallet service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
-var Greeter_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "ewallet.Greeter",
-	HandlerType: (*GreeterServer)(nil),
+var EWallet_ServiceDesc = grpc.ServiceDesc{
+	ServiceName: "ewallet.EWallet",
+	HandlerType: (*EWalletServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "SayHello",
-			Handler:    _Greeter_SayHello_Handler,
-		},
-		{
-			MethodName: "SayHelloAgain",
-			Handler:    _Greeter_SayHelloAgain_Handler,
-		},
-		{
 			MethodName: "CreateWallet",
-			Handler:    _Greeter_CreateWallet_Handler,
+			Handler:    _EWallet_CreateWallet_Handler,
 		},
 		{
 			MethodName: "Send",
-			Handler:    _Greeter_Send_Handler,
+			Handler:    _EWallet_Send_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
