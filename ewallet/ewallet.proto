@@ -16,8 +16,6 @@ service Greeter {
   }
 
   message Wallet {
-    string id = 1;
-    string rev = 2;
 	  string address = 3;
 	  float balance = 4;
   }

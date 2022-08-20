@@ -25,7 +25,7 @@ type server struct {
 }
 
 type Wallet struct {
-	ID      string  `json:"_id"`
+	Id      string  `json:"_id,omitempty"`
 	Rev     string  `json:"_rev,omitempty"`
 	Address string  `json:"address"`
 	Balance float32 `json:"balance"`
@@ -56,6 +56,8 @@ func (*server) CreateWallet(ctx context.Context, req *pb.CreateWalletRequest) (*
 		Balance: walletData.GetBalance(),
 	}
 
+	fmt.Println(data.Address)
+
 	theId := uuid.New().String()
 	_, err := database.Put(context.TODO(), theId, data)
 	if err != nil {
@@ -70,34 +72,66 @@ func (*server) CreateWallet(ctx context.Context, req *pb.CreateWalletRequest) (*
 	}, nil
 }
 
-// func (s *server) Send(ctx context.Context, req *pb.SendRequest) (*pb.SendReply, error) {
+func (s *server) Send(ctx context.Context, req *pb.SendRequest) (*pb.SendReply, error) {
 
-// 	addressFrom := req.GetFrom()
-// 	addressTo := req.GetTo()
+	addressFrom := req.GetFrom()
+	addressTo := req.GetTo()
+	amount := req.GetAmount()
 
-// 	query := map[string]interface{}{
-// 		"selector": map[string]interface{}{
-// 			"Address": map[string]interface{}{
-// 				"$eq": addressFrom,
-// 			},
-// 		},
-// 	}
-// 	results := database.Find(context.TODO(), query)
+	query := map[string]interface{}{
+		"selector": map[string]interface{}{
+			"address": map[string]interface{}{
+				"$eq": addressFrom,
+			},
+		},
+	}
+	results := database.Find(context.TODO(), query)
 
-// 	for results.Next() {
-// 		var wal Wallet
-// 		if err := results.ScanDoc(&wal); err != nil {
-// 			panic(err)
-// 		}
-// 		wal.Balance -= 200
-// 		newRev, err := database.Put(context.TODO(), wal.ID, wal)
-// 		if err != nil {
-// 			panic(err)
-// 		}
-// 		wal.Rev = newRev
-// 	}
+	var walletFrom Wallet
 
-// }
+	for results.Next() {
+		if err := results.ScanDoc(&walletFrom); err != nil {
+			panic(err)
+		}
+
+		if walletFrom.Balance-amount <= 0 {
+			log.Printf("Недостаточно средств в кошельке с адресом: %v", walletFrom.Address)
+			return &pb.SendReply{Balance: walletFrom.Balance}, nil
+		}
+
+		walletFrom.Balance -= amount
+		newRev, err := database.Put(context.TODO(), walletFrom.Id, walletFrom)
+		if err != nil {
+			panic(err)
+		}
+		walletFrom.Rev = newRev
+	}
+
+	query = map[string]interface{}{
+		"selector": map[string]interface{}{
+			"address": map[string]interface{}{
+				"$eq": addressTo,
+			},
+		},
+	}
+	results = database.Find(context.TODO(), query)
+
+	for results.Next() {
+		var walletTo Wallet
+		if err := results.ScanDoc(&walletTo); err != nil {
+			panic(err)
+		}
+
+		walletTo.Balance += amount
+		newRev, err := database.Put(context.TODO(), walletTo.Id, walletTo)
+		if err != nil {
+			panic(err)
+		}
+		walletTo.Rev = newRev
+	}
+	return &pb.SendReply{Balance: walletFrom.Balance}, nil
+
+}
 
 func main() {
 
@@ -114,7 +148,7 @@ func main() {
 
 	// query := map[string]interface{}{
 	// 	"selector": map[string]interface{}{
-	// 		"Address": map[string]interface{}{
+	// 		"address": map[string]interface{}{
 	// 			"$eq": "9ee4b55aa524c869fda5d86dde14c512cec65fb6ff315ce2b45dd76631b2cfcb",
 	// 		},
 	// 	},
@@ -128,7 +162,7 @@ func main() {
 	// 		panic(err)
 	// 	}
 	// 	wal.Balance -= 200
-	// 	newRev, err := database.Put(context.TODO(), wal.ID, wal)
+	// 	newRev, err := database.Put(context.TODO(), wal.Id, wal)
 	// 	if err != nil {
 	// 		panic(err)
 	// 	}
