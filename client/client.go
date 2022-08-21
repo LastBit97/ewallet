@@ -4,6 +4,7 @@ import (
 	"context"
 	"flag"
 	"log"
+	"strconv"
 	"time"
 
 	pb "github.com/LastBit97/ewallet/ewallet"
@@ -15,6 +16,16 @@ var addr = flag.String("addr", "localhost:50051", "the address to connect to")
 
 func main() {
 	flag.Parse()
+	if flag.NArg() < 3 {
+		log.Fatal("not enough arguments")
+	}
+	addressFrom := flag.Arg(0)
+	addressTo := flag.Arg(1)
+	amount, err := strconv.ParseFloat(flag.Arg(2), 32)
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	conn, err := grpc.Dial(*addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		log.Fatalf("did not connect: %v", err)
@@ -26,9 +37,9 @@ func main() {
 	defer cancel()
 
 	reply, err := c.Send(ctx, &pb.SendRequest{
-		From:   "e240d825d255af751f5f55af8d9671beabdf2236c0a3b4e2639b3e182d994c88",
-		To:     "9ee4b55aa524c869fda5d86dde14c512cec65fb6ff315ce2b45dd76631b2cfcb",
-		Amount: 100})
+		From:   addressFrom,
+		To:     addressTo,
+		Amount: float32(amount)})
 
 	if err != nil {
 		log.Fatalf("Unexpected error: %v", err)

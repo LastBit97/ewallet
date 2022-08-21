@@ -76,7 +76,7 @@ func (s *server) Send(ctx context.Context, req *pb.SendRequest) (*pb.SendReply, 
 		}
 
 		if walletFrom.Balance-amount <= 0 {
-			log.Printf("Недостаточно средств в кошельке с адресом: %v", walletFrom.Address)
+			log.Printf("insufficient funds in the wallet: %v", walletFrom.Address)
 			return &pb.SendReply{Balance: walletFrom.Balance}, nil
 		}
 
@@ -121,7 +121,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	err = client.Authenticate(context.TODO(), couchdb.BasicAuth("admin", "diman172839"))
+	err = client.Authenticate(context.TODO(), couchdb.BasicAuth("admin", "admin"))
 	if err != nil {
 		panic(err)
 	}
