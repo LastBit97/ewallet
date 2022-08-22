@@ -24,6 +24,7 @@ const _ = grpc.SupportPackageIsVersion7
 type EWalletClient interface {
 	CreateWallet(ctx context.Context, in *CreateWalletRequest, opts ...grpc.CallOption) (*CreateWalletReply, error)
 	Send(ctx context.Context, in *SendRequest, opts ...grpc.CallOption) (*SendReply, error)
+	GetLast(ctx context.Context, in *GetLastRequest, opts ...grpc.CallOption) (EWallet_GetLastClient, error)
 }
 
 type eWalletClient struct {
@@ -52,12 +53,45 @@ func (c *eWalletClient) Send(ctx context.Context, in *SendRequest, opts ...grpc.
 	return out, nil
 }
 
+func (c *eWalletClient) GetLast(ctx context.Context, in *GetLastRequest, opts ...grpc.CallOption) (EWallet_GetLastClient, error) {
+	stream, err := c.cc.NewStream(ctx, &EWallet_ServiceDesc.Streams[0], "/ewallet.EWallet/GetLast", opts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &eWalletGetLastClient{stream}
+	if err := x.ClientStream.SendMsg(in); err != nil {
+		return nil, err
+	}
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	return x, nil
+}
+
+type EWallet_GetLastClient interface {
+	Recv() (*GetLastReply, error)
+	grpc.ClientStream
+}
+
+type eWalletGetLastClient struct {
+	grpc.ClientStream
+}
+
+func (x *eWalletGetLastClient) Recv() (*GetLastReply, error) {
+	m := new(GetLastReply)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
 // EWalletServer is the server API for EWallet service.
 // All implementations must embed UnimplementedEWalletServer
 // for forward compatibility
 type EWalletServer interface {
 	CreateWallet(context.Context, *CreateWalletRequest) (*CreateWalletReply, error)
 	Send(context.Context, *SendRequest) (*SendReply, error)
+	GetLast(*GetLastRequest, EWallet_GetLastServer) error
 	mustEmbedUnimplementedEWalletServer()
 }
 
@@ -70,6 +104,9 @@ func (UnimplementedEWalletServer) CreateWallet(context.Context, *CreateWalletReq
 }
 func (UnimplementedEWalletServer) Send(context.Context, *SendRequest) (*SendReply, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Send not implemented")
+}
+func (UnimplementedEWalletServer) GetLast(*GetLastRequest, EWallet_GetLastServer) error {
+	return status.Errorf(codes.Unimplemented, "method GetLast not implemented")
 }
 func (UnimplementedEWalletServer) mustEmbedUnimplementedEWalletServer() {}
 
@@ -120,6 +157,27 @@ func _EWallet_Send_Handler(srv interface{}, ctx context.Context, dec func(interf
 	return interceptor(ctx, in, info, handler)
 }
 
+func _EWallet_GetLast_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(GetLastRequest)
+	if err := stream.RecvMsg(m); err != nil {
+		return err
+	}
+	return srv.(EWalletServer).GetLast(m, &eWalletGetLastServer{stream})
+}
+
+type EWallet_GetLastServer interface {
+	Send(*GetLastReply) error
+	grpc.ServerStream
+}
+
+type eWalletGetLastServer struct {
+	grpc.ServerStream
+}
+
+func (x *eWalletGetLastServer) Send(m *GetLastReply) error {
+	return x.ServerStream.SendMsg(m)
+}
+
 // EWallet_ServiceDesc is the grpc.ServiceDesc for EWallet service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -136,6 +194,12 @@ var EWallet_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _EWallet_Send_Handler,
 		},
 	},
-	Streams:  []grpc.StreamDesc{},
+	Streams: []grpc.StreamDesc{
+		{
+			StreamName:    "GetLast",
+			Handler:       _EWallet_GetLast_Handler,
+			ServerStreams: true,
+		},
+	},
 	Metadata: "ewallet/ewallet.proto",
 }

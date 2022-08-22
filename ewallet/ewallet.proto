@@ -9,11 +9,19 @@ service EWallet {
     rpc CreateWallet (CreateWalletRequest) returns (CreateWalletReply) {}
 
     rpc Send(SendRequest) returns (SendReply) {}
+
+    rpc GetLast(GetLastRequest) returns (stream GetLastReply) {}
   }
 
   message Wallet {
 	  string address = 3;
 	  float balance = 4;
+  }
+
+  message Transaction{
+    string datetime = 1;
+    string address = 2;
+    float amount = 3;
   }
 
   message CreateWalletRequest{
@@ -32,4 +40,10 @@ service EWallet {
 
   message SendReply{
     float balance = 1;
+  }
+
+  message GetLastRequest{}
+
+  message GetLastReply{
+    Transaction transaction = 1;
   }
