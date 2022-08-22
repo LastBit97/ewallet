@@ -39,7 +39,7 @@ service EWallet {
   }
 
   message SendReply{
-    float balance = 1;
+    string message = 1;
   }
 
   message GetLastRequest{}

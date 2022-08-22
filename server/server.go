@@ -21,6 +21,14 @@ var (
 
 var database *kivik.DB
 
+const (
+	driverName     string = "couch"
+	dataSourceName string = "http://localhost:5984"
+	user           string = "admin"
+	password       string = "admin"
+	databaseName   string = "ewallet_database"
+)
+
 type server struct {
 	pb.UnimplementedEWalletServer
 }
@@ -40,6 +48,7 @@ type Transaction struct {
 	Datetime string  `json:"datetime"`
 	Address  string  `json:"address"`
 	Amount   float32 `json:"amount"`
+	Flag     bool    `json:"flag"`
 }
 
 func (*server) CreateWallet(ctx context.Context, req *pb.CreateWalletRequest) (*pb.CreateWalletReply, error) {
@@ -87,8 +96,7 @@ func (s *server) Send(ctx context.Context, req *pb.SendRequest) (*pb.SendReply, 
 		}
 
 		if walletFrom.Balance-amount <= 0 {
-			log.Printf("insufficient funds in the wallet: %v", walletFrom.Address)
-			return &pb.SendReply{Balance: walletFrom.Balance}, nil
+			return &pb.SendReply{Message: "insufficient funds in the wallet"}, nil
 		}
 
 		walletFrom.Balance -= amount
@@ -97,6 +105,21 @@ func (s *server) Send(ctx context.Context, req *pb.SendRequest) (*pb.SendReply, 
 			panic(err)
 		}
 		walletFrom.Rev = newRev
+	}
+
+	//create itransaction
+	timeOutput := time.Now().Format("2006-01-02T15:04:05-0700")
+	outputTransaction := Transaction{
+		Type:     "output transaction",
+		Datetime: timeOutput,
+		Address:  walletFrom.Address,
+		Amount:   amount,
+	}
+
+	theId := uuid.New().String()
+	_, err := database.Put(context.TODO(), theId, outputTransaction)
+	if err != nil {
+		panic(err)
 	}
 
 	query = map[string]interface{}{
@@ -122,21 +145,22 @@ func (s *server) Send(ctx context.Context, req *pb.SendRequest) (*pb.SendReply, 
 	}
 
 	//create transaction
-	time := time.Now().Format("02.01.2006 15:04")
-	transaction := Transaction{
-		Type:     "transaction",
-		Datetime: time,
+	timeInput := time.Now().Format("2006-01-02T15:04:05-0700")
+	inputTransaction := Transaction{
+		Type:     "input transaction",
+		Datetime: timeInput,
 		Address:  walletTo.Address,
 		Amount:   amount,
+		Flag:     false,
 	}
 
-	theId := uuid.New().String()
-	_, err := database.Put(context.TODO(), theId, transaction)
+	theId = uuid.New().String()
+	_, err = database.Put(context.TODO(), theId, inputTransaction)
 	if err != nil {
 		panic(err)
 	}
 
-	return &pb.SendReply{Balance: walletFrom.Balance}, nil
+	return &pb.SendReply{Message: "success"}, nil
 
 }
 
@@ -144,7 +168,8 @@ func (s *server) GetLast(req *pb.GetLastRequest, stream pb.EWallet_GetLastServer
 
 	query := map[string]interface{}{
 		"selector": map[string]interface{}{
-			"type": "transaction",
+			"type": "input transaction",
+			"flag": false,
 		},
 	}
 	results := database.Find(context.TODO(), query)
@@ -162,6 +187,12 @@ func (s *server) GetLast(req *pb.GetLastRequest, stream pb.EWallet_GetLastServer
 				Amount:   data.Amount,
 			},
 		})
+
+		data.Flag = true
+		_, err := database.Put(context.TODO(), data.Id, data)
+		if err != nil {
+			panic(err)
+		}
 	}
 	if results.Err() != nil {
 		panic(results.Err())
@@ -172,15 +203,15 @@ func (s *server) GetLast(req *pb.GetLastRequest, stream pb.EWallet_GetLastServer
 func main() {
 
 	//connect to db
-	client, err := kivik.New("couch", "http://localhost:5984")
+	client, err := kivik.New(driverName, dataSourceName)
 	if err != nil {
 		panic(err)
 	}
-	err = client.Authenticate(context.TODO(), couchdb.BasicAuth("admin", "admin"))
+	err = client.Authenticate(context.TODO(), couchdb.BasicAuth(user, password))
 	if err != nil {
 		panic(err)
 	}
-	database = client.DB("ewallet_database")
+	database = client.DB(databaseName)
 
 	flag.Parse()
 	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", *port))

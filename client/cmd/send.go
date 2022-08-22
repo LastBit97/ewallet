@@ -43,7 +43,7 @@ var sendCmd = &cobra.Command{
 		if err != nil {
 			log.Fatalf("Unexpected error: %v", err)
 		}
-		log.Printf("Fund balance: %v", reply.GetBalance())
+		log.Printf("%v", reply.GetMessage())
 	},
 }
 
